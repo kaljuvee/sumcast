@@ -1,0 +1,8 @@
+streamlit
+requests
+transformers
+torch
+openai-whisper
+openai
+whisper
+pydub
