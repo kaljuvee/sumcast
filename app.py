@@ -15,19 +15,41 @@ client = OpenAI(api_key=openai.api_key)
 
 
 # Function to extract audio from Spotify podcast (assuming a downloadable link is provided)
+# Function to extract audio from Spotify podcast (assuming a downloadable link is provided)
 def download_audio(url):
     response = requests.get(url)
-    original_format = url.split('.')[-1]
-    if original_format not in ['flac', 'm4a', 'mp3', 'mp4', 'mpeg', 'mpga', 'oga', 'ogg', 'wav', 'webm']:
-        raise ValueError(f"Unsupported audio format: {original_format}")
+    if response.status_code != 200:
+        raise ValueError(f"Error fetching audio from URL: {response.status_code}")
+
+    # Try to determine the file format from the URL or response headers
+    content_type = response.headers.get('Content-Type')
+    if content_type:
+        # Guess the file extension from the content type
+        format_map = {
+            'audio/mpeg': 'mp3',
+            'audio/mp4': 'mp4',
+            'audio/x-wav': 'wav',
+            'audio/ogg': 'ogg',
+            'audio/webm': 'webm',
+            # Add more mappings as needed
+        }
+        original_format = format_map.get(content_type)
+        if not original_format:
+            raise ValueError(f"Unsupported audio format: {content_type}")
+    else:
+        # Fallback if content type is not available
+        original_format = 'mp3'
+    
     filename = f'podcast.{original_format}'
     with open(filename, 'wb') as f:
         f.write(response.content)
+    
     if original_format != 'mp3':
         audio = AudioSegment.from_file(filename, format=original_format)
         filename = 'podcast.mp3'
         audio.export(filename, format='mp3')
     return filename
+
 
 # Function to convert audio to text using Whisper
 def audio_to_text(audio_file_path):
