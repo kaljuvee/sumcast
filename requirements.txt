@@ -6,3 +6,4 @@ openai-whisper
 openai
 whisper
 pydub
+python-dotenv
